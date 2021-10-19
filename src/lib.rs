@@ -1,16 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use frame_system::pallet::*;
-pub use frame_support::storage::*;
-
-#[cfg(test)]
-mod mock;
-
-#[cfg(test)]
-mod tests;
-
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
+pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
