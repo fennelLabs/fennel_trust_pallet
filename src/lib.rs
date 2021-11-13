@@ -17,7 +17,7 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	#[pallet::getter(fn get_current_trust_count))]
+	#[pallet::getter(fn get_current_trust_count)]
 	/// The total number of trust actions currently active
 	pub type CurrentIssued<T: Config> = StorageValue<_, u32>;
 	#[pallet::storage]
