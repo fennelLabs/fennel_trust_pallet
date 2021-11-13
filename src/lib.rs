@@ -17,19 +17,19 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	#[pallet::getter(fn value1)]
+	#[pallet::getter(fn get_current_trust_count))]
 	/// The total number of trust actions currently active
 	pub type CurrentIssued<T: Config> = StorageValue<_, u32>;
 	#[pallet::storage]
-	#[pallet::getter(fn key1)]
+	#[pallet::getter(fn get_trust_issuance)]
 	/// A Map of lists of all addresses that each address has issued trust for
 	pub type TrustIssuance<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, u32, T::AccountId>;
 	#[pallet::storage]
-	#[pallet::getter(fn value2)]
+	#[pallet::getter(fn get_current_non_trust_count)]
 	/// The current number of _non_trust actions currently active
 	pub type CurrentRevoked<T: Config> = StorageValue<_, u32>;
 	#[pallet::storage]
-	#[pallet::getter(fn key2)]
+	#[pallet::getter(fn get_non_trust_issuance)]
 	/// A Map of lists of all addresses that each address has issued trust for
 	pub type TrustRevocation<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, u32, T::AccountId>;
 
@@ -93,7 +93,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// Revoke trust from an account
+		/// Explcitly mark an account as untrusted
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn revoke_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -115,7 +115,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// Return `address` to an Unknown trust state
+		/// Return an untrusted `address` to an Unknown trust state
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn remove_revoked_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
