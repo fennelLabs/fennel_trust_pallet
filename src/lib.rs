@@ -55,8 +55,6 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn issue_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			// WARN: THIS ITERATION IS VERY INEFFICIENT
-			// NOT SUITABLE FOR PRODUCTION
 			let mut do_insert = true;
 			let mut i = 0;
 			for (_index, issued) in <TrustIssuance<T>>::iter_prefix(&who) {
