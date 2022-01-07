@@ -44,9 +44,12 @@ pub mod pallet {
 	/// A Map of lists of all addresses that each address has issued trust for
 	pub type TrustRevocation<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, u32, T::AccountId>;
 	#[pallet::storage]
+	#[pallet::getter(fn get_current_trust_requests)]
+	pub type CurrentRequests<T: Config> = StorageValue<Value = u32, QueryKind= ValueQuery, OnEmpty = DefaultCurrent<T>>;
+	#[pallet::storage]
 	#[pallet::getter(fn get_trust_request)]
 	/// A map listing all requests for trust from one account to another.
-	pub type TrustRequestList<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, T::AccountId>;
+	pub type TrustRequestList<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, u32, T::AccountId>;
 
 	#[pallet::event]
 	#[pallet::metadata(T::AccountId = "AccountId")]
@@ -55,6 +58,7 @@ pub mod pallet {
 		TrustIssued(T::AccountId, T::AccountId),
 		TrustRevoked(T::AccountId, T::AccountId),
 		TrustRequest(T::AccountId, T::AccountId),
+		TrustRequestRemoved(T::AccountId, T::AccountId),
 		TrustIssuanceRemoved(T::AccountId, T::AccountId),
 		TrustRevocationRemoved(T::AccountId, T::AccountId),
 	}
@@ -111,8 +115,38 @@ pub mod pallet {
 		pub fn request_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			<TrustRequestList<T>>::insert(&who, &address);
-			Self::deposit_event(Event::TrustRequest(who, address));
+			let mut do_insert = true;
+			let mut i = 0;
+			for (_index, issued) in <TrustRequestList<T>>::iter_prefix(&who) {
+				if issued == address { do_insert = false; }
+				i += 1;
+			}
+
+			if do_insert {
+				let total: u32 = <CurrentRequests<T>>::get();
+				<CurrentRequests<T>>::put(total + 1);
+				<TrustRequestList<T>>::insert(&who, i, &address);
+				Self::deposit_event(Event::TrustRequest(who, address));
+			}
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn cancel_trust_request(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			let mut do_remove: Option<u32> = None;
+			for (index, issued) in <TrustRequestList<T>>::iter_prefix(&who) {
+				if issued == address { do_remove = Some(index); }
+			}
+
+			if let Some(index) = do_remove {
+				<TrustRequestList<T>>::remove(&who, index);
+				let key = <CurrentRequests<T>>::get();
+				<CurrentRequests<T>>::put(key - 1);
+				Self::deposit_event(Event::TrustRequestRemoved(address, who));
+			}
 
 			Ok(())
 		}
