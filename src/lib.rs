@@ -43,6 +43,10 @@ pub mod pallet {
 	#[pallet::getter(fn get_non_trust_issuance)]
 	/// A Map of lists of all addresses that each address has issued trust for
 	pub type TrustRevocation<T: Config> = StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, u32, T::AccountId>;
+	#[pallet::storage]
+	#[pallet::getter(fn get_trust_request)]
+	/// A map listing all requests for trust from one account to another.
+	pub type TrustRequestList<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, T::AccountId>;
 
 	#[pallet::event]
 	#[pallet::metadata(T::AccountId = "AccountId")]
@@ -50,6 +54,7 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		TrustIssued(T::AccountId, T::AccountId),
 		TrustRevoked(T::AccountId, T::AccountId),
+		TrustRequest(T::AccountId, T::AccountId),
 		TrustIssuanceRemoved(T::AccountId, T::AccountId),
 		TrustRevocationRemoved(T::AccountId, T::AccountId),
 	}
@@ -98,6 +103,16 @@ pub mod pallet {
 				<CurrentIssued<T>>::put(key - 1);
 				Self::deposit_event(Event::TrustIssuanceRemoved(address, who));
 			}
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn request_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			<TrustRequestList<T>>::insert(&who, &address);
+			Self::deposit_event(Event::TrustRequest(who, address));
 
 			Ok(())
 		}
