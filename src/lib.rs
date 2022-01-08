@@ -78,8 +78,9 @@ pub mod pallet {
 
 			if !<TrustIssuance<T>>::contains_key(&who, &address) {
 				let total: u32 = <CurrentIssued<T>>::get();
+				let new_total: u32 = total.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
 				<TrustIssuance<T>>::insert(&who, &address, total);
-				<CurrentIssued<T>>::put(total + 1);
+				<CurrentIssued<T>>::put(new_total);
 				Self::deposit_event(Event::TrustIssued(who, address));
 			}
 			
@@ -92,9 +93,10 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			if <TrustIssuance<T>>::contains_key(&who, &address) {
-				<TrustIssuance<T>>::remove(&who, &address);
 				let key = <CurrentIssued<T>>::get();
-				<CurrentIssued<T>>::put(key - 1);
+				let new_key: u32 = key.checked_sub(1).ok_or(Error::<T>::StorageOverflow)?;
+				<TrustIssuance<T>>::remove(&who, &address);
+				<CurrentIssued<T>>::put(new_key);
 				Self::deposit_event(Event::TrustIssuanceRemoved(address, who));
 			}
 
@@ -107,7 +109,8 @@ pub mod pallet {
 
 			if !<TrustRequestList<T>>::contains_key(&who, &address) {
 				let total: u32 = <CurrentRequests<T>>::get();
-				<CurrentRequests<T>>::put(total + 1);
+				let new_total: u32 = total.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
+				<CurrentRequests<T>>::put(new_total);
 				<TrustRequestList<T>>::insert(&who, &address, total);
 				Self::deposit_event(Event::TrustRequest(who, address));
 			}
@@ -120,9 +123,10 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			if <TrustRequestList<T>>::contains_key(&who, &address) {
-				<TrustRequestList<T>>::remove(&who, &address);
 				let key = <CurrentRequests<T>>::get();
-				<CurrentRequests<T>>::put(key - 1);
+				let new_key: u32 = key.checked_sub(1).ok_or(Error::<T>::StorageOverflow)?;
+				<TrustRequestList<T>>::remove(&who, &address);
+				<CurrentRequests<T>>::put(new_key);
 				Self::deposit_event(Event::TrustRequestRemoved(address, who));
 			}
 
@@ -135,9 +139,10 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			if !<TrustRevocation<T>>::contains_key(&who, &address) {
-				let key: u32 = <CurrentRevoked<T>>::get();	
+				let key: u32 = <CurrentRevoked<T>>::get();
+				let new_key: u32 = key.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
 				<TrustRevocation<T>>::insert(&who, &address, key);
-				<CurrentRevoked<T>>::put(key + 1);
+				<CurrentRevoked<T>>::put(new_key);
 				Self::deposit_event(Event::TrustRevoked(address, who));
 			}
 		
@@ -150,9 +155,10 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			if <TrustRevocation<T>>::contains_key(&who, &address) {
-				<TrustRevocation<T>>::remove(&who, &address);	
 				let key: u32 = <CurrentRevoked<T>>::get();
-				<CurrentRevoked<T>>::put(key - 1);
+				let new_key: u32 = key.checked_sub(1).ok_or(Error::<T>::StorageOverflow)?;
+				<TrustRevocation<T>>::remove(&who, &address);	
+				<CurrentRevoked<T>>::put(new_key);
 				Self::deposit_event(Event::TrustRevocationRemoved(address, who));
 			}
 
