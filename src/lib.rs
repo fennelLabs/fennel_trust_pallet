@@ -78,13 +78,10 @@ pub mod pallet {
 
 			let total: u32 = <CurrentIssued<T>>::get();
 
-			match <TrustIssuance<T>>::try_get(&who, &address) {
-				Ok(_) => (),
-				Err(_) => {
-					<TrustIssuance<T>>::insert(&who, &address, total);
-					<CurrentIssued<T>>::put(total + 1);
-					Self::deposit_event(Event::TrustIssued(who, address));
-				},
+			if <TrustIssuance<T>>::contains_key(&who, &address) {
+				<TrustIssuance<T>>::insert(&who, &address, total);
+				<CurrentIssued<T>>::put(total + 1);
+				Self::deposit_event(Event::TrustIssued(who, address));
 			}
 			
 			Ok(())
@@ -95,14 +92,11 @@ pub mod pallet {
 		pub fn remove_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			match <TrustIssuance<T>>::try_get(&who, &address) {
-				Ok(_) => {
-					<TrustIssuance<T>>::remove(&who, &address);
-					let key = <CurrentIssued<T>>::get();
-					<CurrentIssued<T>>::put(key - 1);
-					Self::deposit_event(Event::TrustIssuanceRemoved(address, who));
-				},
-				Err(_) => (),
+			if <TrustIssuance<T>>::contains_key(&who, &address) {
+				<TrustIssuance<T>>::remove(&who, &address);
+				let key = <CurrentIssued<T>>::get();
+				<CurrentIssued<T>>::put(key - 1);
+				Self::deposit_event(Event::TrustIssuanceRemoved(address, who));
 			}
 
 			Ok(())
@@ -112,14 +106,11 @@ pub mod pallet {
 		pub fn request_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			match <TrustRequestList<T>>::try_get(&who, &address) {
-				Ok(_) => (),
-				Err(_) => {
-					let total: u32 = <CurrentRequests<T>>::get();
-					<CurrentRequests<T>>::put(total + 1);
-					<TrustRequestList<T>>::insert(&who, &address, total);
-					Self::deposit_event(Event::TrustRequest(who, address));
-				},
+			if <TrustRequestList<T>>::contains_key(&who, &address) {
+				let total: u32 = <CurrentRequests<T>>::get();
+				<CurrentRequests<T>>::put(total + 1);
+				<TrustRequestList<T>>::insert(&who, &address, total);
+				Self::deposit_event(Event::TrustRequest(who, address));
 			}
 
 			Ok(())
@@ -129,14 +120,11 @@ pub mod pallet {
 		pub fn cancel_trust_request(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			match <TrustRequestList<T>>::try_get(&who, &address) {
-				Ok(_) => {
-					<TrustRequestList<T>>::remove(&who, &address);
-					let key = <CurrentRequests<T>>::get();
-					<CurrentRequests<T>>::put(key - 1);
-					Self::deposit_event(Event::TrustRequestRemoved(address, who));
-				},
-				Err(_) => (),
+			if <TrustRequestList<T>>::contains_key(&who, &address) {
+				<TrustRequestList<T>>::remove(&who, &address);
+				let key = <CurrentRequests<T>>::get();
+				<CurrentRequests<T>>::put(key - 1);
+				Self::deposit_event(Event::TrustRequestRemoved(address, who));
 			}
 
 			Ok(())
@@ -147,14 +135,11 @@ pub mod pallet {
 		pub fn revoke_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			match <TrustRevocation<T>>::try_get(&who, &address) {
-				Ok(_) => (),
-				Err(_) => {
-					let key: u32 = <CurrentRevoked<T>>::get();	
-					<TrustRevocation<T>>::insert(&who, &address, key);
-					<CurrentRevoked<T>>::put(key + 1);
-					Self::deposit_event(Event::TrustRevoked(address, who));
-				},
+			if <TrustRevocation<T>>::contains_key(&who, &address) {
+				let key: u32 = <CurrentRevoked<T>>::get();	
+				<TrustRevocation<T>>::insert(&who, &address, key);
+				<CurrentRevoked<T>>::put(key + 1);
+				Self::deposit_event(Event::TrustRevoked(address, who));
 			}
 		
 			Ok(())
@@ -165,14 +150,11 @@ pub mod pallet {
 		pub fn remove_revoked_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			match <TrustRevocation<T>>::try_get(&who, &address) {
-				Ok(_) => {
-					<TrustRevocation<T>>::remove(&who, &address);	
-					let key: u32 = <CurrentRevoked<T>>::get();
-					<CurrentRevoked<T>>::put(key - 1);
-					Self::deposit_event(Event::TrustRevocationRemoved(address, who));
-				},
-				Err(_) => (),
+			if <TrustRevocation<T>>::contains_key(&who, &address) {
+				<TrustRevocation<T>>::remove(&who, &address);	
+				let key: u32 = <CurrentRevoked<T>>::get();
+				<CurrentRevoked<T>>::put(key - 1);
+				Self::deposit_event(Event::TrustRevocationRemoved(address, who));
 			}
 
 			Ok(())
