@@ -76,9 +76,8 @@ pub mod pallet {
 		pub fn issue_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let total: u32 = <CurrentIssued<T>>::get();
-
-			if <TrustIssuance<T>>::contains_key(&who, &address) {
+			if !<TrustIssuance<T>>::contains_key(&who, &address) {
+				let total: u32 = <CurrentIssued<T>>::get();
 				<TrustIssuance<T>>::insert(&who, &address, total);
 				<CurrentIssued<T>>::put(total + 1);
 				Self::deposit_event(Event::TrustIssued(who, address));
@@ -106,7 +105,7 @@ pub mod pallet {
 		pub fn request_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			if <TrustRequestList<T>>::contains_key(&who, &address) {
+			if !<TrustRequestList<T>>::contains_key(&who, &address) {
 				let total: u32 = <CurrentRequests<T>>::get();
 				<CurrentRequests<T>>::put(total + 1);
 				<TrustRequestList<T>>::insert(&who, &address, total);
@@ -135,7 +134,7 @@ pub mod pallet {
 		pub fn revoke_trust(origin: OriginFor<T>, address: T::AccountId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			if <TrustRevocation<T>>::contains_key(&who, &address) {
+			if !<TrustRevocation<T>>::contains_key(&who, &address) {
 				let key: u32 = <CurrentRevoked<T>>::get();	
 				<TrustRevocation<T>>::insert(&who, &address, key);
 				<CurrentRevoked<T>>::put(key + 1);
